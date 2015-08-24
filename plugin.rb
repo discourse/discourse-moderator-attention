@@ -89,6 +89,26 @@ SQL
 
   require_dependency 'topic_view_serializer'
   class ::TopicViewSerializer
+    attribute :unreviewed_post_numbers
+
+    def include_unreviewed_post_numbers
+      scope.is_moderator?
+    end
+
+
+    def unreviewed_post_numbers
+      sql = <<SQL
+      SELECT post_number
+      FROM posts p
+      LEFT JOIN moderator_post_views v ON v.post_id = p.id
+      WHERE p.deleted_at IS NULL AND
+            p.topic_id = :topic_id AND
+            NOT p.hidden AND
+            v.post_id IS NULL
+SQL
+      Post.exec_sql(sql, topic_id: object.topic.id).column_values(0).map(&:to_i)
+    end
+
   end
 
   require_dependency 'topic'
