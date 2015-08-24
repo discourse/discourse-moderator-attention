@@ -30,7 +30,17 @@ export default {
     TopicStatusComponent.reopen({
 
       unreviewedChanged: function(){
-        this.rerender();
+        var unreviewed = this.get('topic.unreviewed_post_numbers');
+        if (!unreviewed) {
+          return;
+        }
+
+        if (unreviewed.length === 0) {
+          this.rerender();
+        } else {
+          // ninja in url so it does not flash on rerender
+          this.$('.unreviewed')[0].href = this.get('topic.url') + "/" + unreviewed[0];
+        }
       }.observes('topic.unreviewed_post_numbers.[]'),
 
       renderString: function(buffer){
@@ -38,7 +48,7 @@ export default {
         if (posts && posts.length > 0) {
           var title = Handlebars.Utils.escapeExpression(I18n.t('mod_attention.requires_review'));
           var url = this.get('topic.url') + "/" + posts[0];
-          buffer.push("<a href='" + url + "' title='" + title  +"' class='topic-status'><i class='fa fa-asterisk'></i></a>");
+          buffer.push("<a href='" + url + "' title='" + title  +"' class='topic-status unreviewed'><i class='fa fa-asterisk'></i></a>");
         }
         this._super();
       }
