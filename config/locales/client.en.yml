@@ -1,0 +1,4 @@
+en:
+  js:
+    mod_attention:
+      requires_review: "Topic contains posts that have not been reviews by moderators"
