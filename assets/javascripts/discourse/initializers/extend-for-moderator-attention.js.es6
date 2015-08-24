@@ -16,6 +16,7 @@ export default {
           const unreviewed = topic.get('unreviewed_post_numbers');
           if (unreviewed) {
             unreviewed.removeObjects(postNumbers);
+            topic.set('requires_review', unreviewed.length > 0);
           }
         }
         this._super(topicId, postNumbers);
