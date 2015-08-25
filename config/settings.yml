@@ -1,0 +1,5 @@
+plugins:
+  minimum_review_date:
+    default: ''
+    regex: "20[0-9][0-9]-[0-1][0-9]-[0-3][0-9]"
+

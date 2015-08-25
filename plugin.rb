@@ -104,10 +104,15 @@ SQL
       WHERE p.deleted_at IS NULL AND
             p.topic_id = :topic_id AND
             NOT p.hidden AND
-            v.post_id IS NULL
+            v.post_id IS NULL AND
+            p.updated_at > :min_date
       ORDER BY post_number
 SQL
-      Post.exec_sql(sql, topic_id: object.topic.id).column_values(0).map(&:to_i)
+      min_date = SiteSetting.minimum_review_date.present? ?
+        Date.parse(SiteSetting.minimum_review_date) :
+        Date.parse('1970-01-01')
+
+      Post.exec_sql(sql, min_date: min_date, topic_id: object.topic.id).column_values(0).map(&:to_i)
     end
 
   end
@@ -130,11 +135,16 @@ SQL
         LEFT JOIN moderator_post_views v ON p.id = v.post_id
         WHERE p.deleted_at IS NULL AND NOT p.hidden AND v.post_id IS NULL
           AND p.topic_id IN (:topic_ids)
+          AND p.updated_at > :min_date
         GROUP BY p.topic_id
 SQL
 
+        min_date = SiteSetting.minimum_review_date.present? ?
+          Date.parse(SiteSetting.minimum_review_date) :
+          Date.parse('1970-01-01')
+
         requires_review = {}
-        Topic.exec_sql(sql, topic_ids: topic_ids).values.each do |row|
+        Topic.exec_sql(sql, topic_ids: topic_ids, min_date: min_date).values.each do |row|
           requires_review[row[0].to_i] = row[1].to_i
         end
 
