@@ -105,6 +105,7 @@ SQL
             p.topic_id = :topic_id AND
             NOT p.hidden AND
             v.post_id IS NULL
+      ORDER BY post_number
 SQL
       Post.exec_sql(sql, topic_id: object.topic.id).column_values(0).map(&:to_i)
     end

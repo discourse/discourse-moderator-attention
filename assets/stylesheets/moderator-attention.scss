@@ -1,1 +1,8 @@
 .topic-list  .fa-asterisk { color: dark-light-choose(scale-color($primary, $lightness: 50%), scale-color($secondary, $lightness: 50%)); }
+
+.requires-review .topic-meta-data .post-date:after{
+  content: "\f069";
+  font-family: FontAwesome;
+  margin-left: 5px;
+}
+

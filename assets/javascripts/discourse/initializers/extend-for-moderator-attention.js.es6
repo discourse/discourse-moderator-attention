@@ -8,6 +8,23 @@ export default {
     const currentUser = container.lookup('current-user:main');
     if (!currentUser || !currentUser.get('moderator')) { return; }
 
+    const Post= container.lookupFactory('model:post');
+    Post.reopen({
+      @computed()
+      requiresReview(){
+        const unreviewed = this.get('topic.unreviewed_post_numbers');
+        if (!unreviewed) { return; }
+
+        // true for binary search
+        return _.indexOf(unreviewed, this.get('post_number'), true) !== -1;
+      }
+    });
+
+    const PostView = container.lookupFactory('view:post');
+    PostView.reopen({
+      classNameBindings: ['post.requiresReview:requires-review']
+    });
+
     const TopicController = container.lookupFactory('controller:topic');
     TopicController.reopen({
       readPosts(topicId, postNumbers) {
@@ -15,8 +32,12 @@ export default {
         if (topic && topic.get('id') === topicId) {
           const unreviewed = topic.get('unreviewed_post_numbers');
           if (unreviewed) {
+            const initial = unreviewed.length;
             unreviewed.removeObjects(postNumbers);
             topic.set('requires_review', unreviewed.length > 0);
+            if (unreviewed.length === 0 && initial === 1) {
+              topic.set('fully_reviewed', true);
+            }
           }
         }
         this._super(topicId, postNumbers);
@@ -43,10 +64,13 @@ export default {
 
       renderString(buffer) {
         const posts = this.get('topic.unreviewed_post_numbers');
-        if (posts && posts.length > 0) {
+        const fullyReviewed = this.get('topic.fully_reviewed');
+
+        if (fullyReviewed || (posts && posts.length > 0)) {
           const title = Handlebars.Utils.escapeExpression(I18n.t('mod_attention.requires_review'));
           const url = this.get('topic.url') + "/" + posts[0];
-          buffer.push(`<a href='${url}' title='${title}' class='topic-status unreviewed'>${icon}</a>`);
+          var reviewedClass = fullyReviewed ? "reviewed" : "unreviewed";
+          buffer.push(`<a href='${url}' title='${title}' class='topic-status ${reviewedClass}'>${icon}</a>`);
         }
         this._super(buffer);
       }
@@ -55,9 +79,9 @@ export default {
     const TopicStatusView = container.lookupFactory('view:topic-status');
     TopicStatusView.reopen({
       @computed('topic.requires_review', 'topic.url')
-      statuses(requiresReview, topicUrl) {
+      statuses(requiresReview, topicUrl, fullyReviewed) {
         const results = this._super();
-        if (requiresReview) {
+        if (requiresReview || fullyReviewed) {
           results.push({
             openTag: 'a href',
             closeTag: 'a',
