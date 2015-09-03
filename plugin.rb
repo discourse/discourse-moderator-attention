@@ -92,7 +92,7 @@ SQL
     attribute :unreviewed_post_numbers
 
     def include_unreviewed_post_numbers
-      scope.is_moderator?
+      scope.is_moderator? && !object.topic.private_message?
     end
 
 
@@ -132,10 +132,12 @@ SQL
         sql = <<SQL
         SELECT p.topic_id, MIN(post_number)
         FROM posts p
+        JOIN topics t on t.id = p.topic_id
         LEFT JOIN moderator_post_views v ON p.id = v.post_id
         WHERE p.deleted_at IS NULL AND NOT p.hidden AND v.post_id IS NULL
           AND p.topic_id IN (:topic_ids)
           AND p.updated_at > :min_date
+          AND t.archetype <> 'private_message'
         GROUP BY p.topic_id
 SQL
 
