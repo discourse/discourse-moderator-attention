@@ -1,5 +1,23 @@
 import { default as computed, observes } from 'ember-addons/ember-computed-decorators';
 import { iconHTML } from 'discourse/helpers/fa-icon';
+import { withPluginApi } from 'discourse/lib/plugin-api';
+
+function oldPluginCode(container) {
+  const PostView = container.lookupFactory('view:post');
+  PostView.reopen({
+    classNameBindings: ['post.requiresReview:requires-review']
+  });
+}
+
+function initializeModeratorAttention(api) {
+  api.decorateWidget('post:classNames', dec => {
+    const post = dec.getModel();
+
+    if (post.get('requiresReview')) {
+      return ['requires-review'];
+    }
+  });
+}
 
 export default {
   name: 'extend-for-moderator-attention',
@@ -18,11 +36,6 @@ export default {
         // true for binary search
         return _.indexOf(unreviewed, this.get('post_number'), true) !== -1;
       }
-    });
-
-    const PostView = container.lookupFactory('view:post');
-    PostView.reopen({
-      classNameBindings: ['post.requiresReview:requires-review']
     });
 
     const TopicController = container.lookupFactory('controller:topic');
@@ -93,5 +106,7 @@ export default {
         return results;
       }
     });
+
+    withPluginApi('0.1', api => initializeModeratorAttention(api), { noApi: () => oldPluginCode(container) });
   }
 }
