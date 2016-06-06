@@ -4,4 +4,6 @@ This plugin was designed for heavily moderated sites, once installed we track wh
 
 Any unmoderated topics (topics with at least 1 unmoderated post) will be displayed in the topic list with and asterisk for moderators only.
 
+## License
 
+MIT
