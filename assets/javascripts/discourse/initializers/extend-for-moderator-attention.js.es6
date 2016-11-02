@@ -1,5 +1,5 @@
 import { default as computed, observes } from 'ember-addons/ember-computed-decorators';
-import { iconHTML } from 'discourse/helpers/fa-icon';
+import { iconHTML } from 'discourse-common/helpers/fa-icon';
 import { withPluginApi } from 'discourse/lib/plugin-api';
 
 function oldPluginCode(container) {
