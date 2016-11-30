@@ -1,6 +1,7 @@
 import { default as computed, observes } from 'ember-addons/ember-computed-decorators';
 import { iconHTML } from 'discourse-common/helpers/fa-icon';
 import { withPluginApi } from 'discourse/lib/plugin-api';
+import TopicStatusView from 'discourse/raw-views/topic-status';
 
 function oldPluginCode(container) {
   const PostView = container.lookupFactory('view:post');
@@ -26,7 +27,7 @@ export default {
     const currentUser = container.lookup('current-user:main');
     if (!currentUser || !currentUser.get('moderator')) { return; }
 
-    const Post= container.lookupFactory('model:post');
+    const Post = container.lookupFactory('model:post');
     Post.reopen({
       @computed()
       requiresReview(){
@@ -71,7 +72,10 @@ export default {
           this.rerender();
         } else {
           // ninja in url so it does not flash on rerender
-          this.$('.unreviewed')[0].href = this.get('topic.url') + "/" + unreviewed[0];
+          const first = this.$('.unreviewed')[0];
+          if (first) {
+            first.href = this.get('topic.url') + "/" + unreviewed[0];
+          }
         }
       },
 
@@ -89,7 +93,6 @@ export default {
       }
     });
 
-    const TopicStatusView = container.lookupFactory('view:topic-status');
     TopicStatusView.reopen({
       @computed('topic.requires_review', 'topic.url')
       statuses(requiresReview, topicUrl, fullyReviewed) {
