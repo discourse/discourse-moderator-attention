@@ -4,7 +4,7 @@ import { withPluginApi } from 'discourse/lib/plugin-api';
 import TopicStatusView from 'discourse/raw-views/topic-status';
 
 function oldPluginCode(container) {
-  const PostView = container.lookupFactory('view:post');
+  const PostView = container.factoryFor('view:post').class;
   PostView.reopen({
     classNameBindings: ['post.requiresReview:requires-review']
   });
@@ -23,11 +23,10 @@ function initializeModeratorAttention(api) {
 export default {
   name: 'extend-for-moderator-attention',
   initialize(container) {
-
     const currentUser = container.lookup('current-user:main');
     if (!currentUser || !currentUser.get('moderator')) { return; }
 
-    const Post = container.lookupFactory('model:post');
+    const Post = container.factoryFor('model:post').class;
     Post.reopen({
       @computed()
       requiresReview(){
@@ -39,7 +38,7 @@ export default {
       }
     });
 
-    const TopicController = container.lookupFactory('controller:topic');
+    const TopicController = container.factoryFor('controller:topic').class;
     TopicController.reopen({
       readPosts(topicId, postNumbers) {
         const topic = this.get('model.postStream.topic');
@@ -59,7 +58,7 @@ export default {
     });
 
     // used in topic (TODO centralize this)
-    const TopicStatusComponent = container.lookupFactory('component:topic-status');
+    const TopicStatusComponent = container.factoryFor('component:topic-status').class;
     const icon = iconHTML('asterisk');
     TopicStatusComponent.reopen({
 
