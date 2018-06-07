@@ -11,19 +11,22 @@ after_initialize do
 
   module ::DiscourseModeratorAttention; end
 
-  # Jimmy in our tracking table
-  got_tracking_table = Topic.exec_sql "SELECT 1 FROM moderator_post_views LIMIT 1" rescue nil
+  begin
+    # Jimmy in our tracking table
+    got_tracking_table = Topic.exec_sql "SELECT 1 FROM moderator_post_views LIMIT 1" rescue nil
 
-  unless got_tracking_table
-    Topic.transaction do
-      Topic.exec_sql "CREATE TABLE moderator_post_views(
-          post_id int not null,
-          user_id int not null,
-          last_viewed timestamp without time zone not null
-        )"
-      Topic.exec_sql "CREATE UNIQUE INDEX idx_moderator_post_views_post_id
-                      ON moderator_post_views (post_id, user_id)"
+    unless got_tracking_table
+      Topic.transaction do
+        Topic.exec_sql "CREATE TABLE moderator_post_views(
+            post_id int not null,
+            user_id int not null,
+            last_viewed timestamp without time zone not null
+          )"
+        Topic.exec_sql "CREATE UNIQUE INDEX idx_moderator_post_views_post_id
+                        ON moderator_post_views (post_id, user_id)"
+      end
     end
+  rescue ActiveRecord::NoDatabaseError
   end
 
   module ::DiscourseModeratorAttention::TopicsController
