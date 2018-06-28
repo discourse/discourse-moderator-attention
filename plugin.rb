@@ -13,7 +13,7 @@ after_initialize do
 
   begin
     # Jimmy in our tracking table
-    got_tracking_table = DB.query_single("SELECT count(*) FROM moderator_post_views LIMIT 1") rescue nil
+    got_tracking_table = DB.query_single("SELECT 1 FROM moderator_post_views LIMIT 1") rescue nil
     unless got_tracking_table
       Topic.transaction do
         DB.exec "CREATE TABLE moderator_post_views(
