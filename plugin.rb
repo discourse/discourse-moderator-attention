@@ -144,7 +144,7 @@ SQL
           Date.parse('1970-01-01')
 
         requires_review = {}
-        DB.query(sql, topic_ids: topic_ids, min_date: min_date).values.each do |row|
+        DB.query(sql, topic_ids: topic_ids, min_date: min_date).each do |row|
           requires_review[row.topic_id] = row.min_id
         end
 
@@ -160,7 +160,6 @@ SQL
   class ::TopicList
     prepend ::DiscourseModeratorAttention::TopicList
   end
-
 
   require_dependency 'topic_list_item_serializer'
 
