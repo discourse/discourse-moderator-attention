@@ -13,16 +13,16 @@ after_initialize do
 
   begin
     # Jimmy in our tracking table
-    got_tracking_table = Topic.exec_sql "SELECT 1 FROM moderator_post_views LIMIT 1" rescue nil
+    got_tracking_table = DB.query_single("SELECT 1 FROM moderator_post_views LIMIT 1").first rescue nil
 
     unless got_tracking_table
       Topic.transaction do
-        Topic.exec_sql "CREATE TABLE moderator_post_views(
+        DB.exec "CREATE TABLE moderator_post_views(
             post_id int not null,
             user_id int not null,
             last_viewed timestamp without time zone not null
           )"
-        Topic.exec_sql "CREATE UNIQUE INDEX idx_moderator_post_views_post_id
+        DB.exec "CREATE UNIQUE INDEX idx_moderator_post_views_post_id
                         ON moderator_post_views (post_id, user_id)"
       end
     end
@@ -42,42 +42,38 @@ after_initialize do
       result
     end
 
-
     def record_moderator_timings(user_id, topic_id, post_numbers)
       return unless topic_id > 0 && post_numbers.length > 0
 
-      sql = <<SQL
-  UPDATE moderator_post_views v
-  SET last_viewed = :date
-  FROM posts p
-  WHERE p.id = v.post_id AND
-        v.user_id = :user_id AND
-        post_id IN (
-          SELECT id FROM posts WHERE topic_id = :topic_id AND post_number IN (:post_numbers)
-        )
-  RETURNING p.post_number
-SQL
+      sql = <<~SQL
+        UPDATE moderator_post_views v
+        SET last_viewed = :date
+        FROM posts p
+        WHERE p.id = v.post_id AND
+              v.user_id = :user_id AND
+              post_id IN (
+                SELECT id FROM posts WHERE topic_id = :topic_id AND post_number IN (:post_numbers)
+              )
+        RETURNING p.post_number
+      SQL
       args = {
          date: Time.zone.now,
          topic_id: topic_id,
          user_id: user_id
       }
 
-
-      result = Topic.exec_sql(sql, args.merge(post_numbers: post_numbers))
-
-      existing = result.column_values(0).map(&:to_i)
+      existing = DB.query_single(sql, args.merge(post_numbers: post_numbers)).first.to_i
 
       (post_numbers - existing).each do |number|
         begin
-          sql = <<SQL
+          sql = <<~SQL
             INSERT INTO moderator_post_views(last_viewed, post_id, user_id)
 
             VALUES(:date, (SELECT id FROM posts
                            WHERE topic_id = :topic_id AND post_number = :post_number),
                    :user_id)
-SQL
-          Topic.exec_sql(sql, args.merge(post_number: number))
+          SQL
+          DB.exec(sql, args.merge(post_number: number))
         rescue PG::UniqueViolation
           # skip
         end
@@ -98,7 +94,6 @@ SQL
       scope.is_moderator? && !object.topic.private_message?
     end
 
-
     def unreviewed_post_numbers
       sql = <<SQL
       SELECT post_number
@@ -115,7 +110,7 @@ SQL
         Date.parse(SiteSetting.minimum_review_date) :
         Date.parse('1970-01-01')
 
-      Post.exec_sql(sql, min_date: min_date, topic_id: object.topic.id).column_values(0).map(&:to_i)
+      DB.query_single(sql, min_date: min_date, topic_id: object.topic.id)
     end
 
   end
@@ -132,25 +127,25 @@ SQL
 
       if @current_user && @current_user.moderator?
         topic_ids = topics.map(&:id)
-        sql = <<SQL
-        SELECT p.topic_id, MIN(post_number)
-        FROM posts p
-        JOIN topics t on t.id = p.topic_id
-        LEFT JOIN moderator_post_views v ON p.id = v.post_id
-        WHERE p.deleted_at IS NULL AND NOT p.hidden AND v.post_id IS NULL
-          AND p.topic_id IN (:topic_ids)
-          AND p.updated_at > :min_date
-          AND t.archetype <> 'private_message'
-        GROUP BY p.topic_id
-SQL
+        sql = <<~SQL
+          SELECT p.topic_id, MIN(post_number) as min_id
+          FROM posts p
+          JOIN topics t on t.id = p.topic_id
+          LEFT JOIN moderator_post_views v ON p.id = v.post_id
+          WHERE p.deleted_at IS NULL AND NOT p.hidden AND v.post_id IS NULL
+            AND p.topic_id IN (:topic_ids)
+            AND p.updated_at > :min_date
+            AND t.archetype <> 'private_message'
+          GROUP BY p.topic_id
+        SQL
 
         min_date = SiteSetting.minimum_review_date.present? ?
           Date.parse(SiteSetting.minimum_review_date) :
           Date.parse('1970-01-01')
 
         requires_review = {}
-        Topic.exec_sql(sql, topic_ids: topic_ids, min_date: min_date).values.each do |row|
-          requires_review[row[0].to_i] = row[1].to_i
+        DB.query(sql, topic_ids: topic_ids, min_date: min_date).values.each do |row|
+          requires_review[row.topic_id] = row.min_id
         end
 
         topics.each do |t|
