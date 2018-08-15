@@ -55,13 +55,14 @@ after_initialize do
               )
         RETURNING p.post_number
       SQL
+
       args = {
          date: Time.zone.now,
          topic_id: topic_id,
          user_id: user_id
       }
 
-      existing = DB.query_single(sql, args.merge(post_numbers: post_numbers)).first.to_i
+      existing = DB.query_single(sql, args.merge(post_numbers: post_numbers))
 
       (post_numbers - existing).each do |number|
         begin
