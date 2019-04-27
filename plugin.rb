@@ -7,6 +7,8 @@ PLUGIN_NAME = "discourse_moderator_attention".freeze
 
 register_asset 'stylesheets/moderator-attention.scss'
 
+register_svg_icon "asterisk" if respond_to?(:register_svg_icon)
+
 after_initialize do
 
   module ::DiscourseModeratorAttention; end
