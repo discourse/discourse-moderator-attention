@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # name: discourse-moderator-attention
 # about: add icon next to all topics that were not views by moderators
 # version: 0.1
