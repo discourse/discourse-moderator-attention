@@ -40,8 +40,7 @@ export default {
           return;
         }
 
-        // true for binary search
-        return _.indexOf(unreviewed, this.get("post_number"), true) !== -1;
+        return unreviewed.indexOf(this.get("post_number")) !== -1
       }
     });
 
