@@ -40,7 +40,7 @@ export default {
           return;
         }
 
-        return unreviewed.indexOf(this.get("post_number")) !== -1
+        return unreviewed.indexOf(this.get("post_number")) !== -1;
       }
     });
 
