@@ -1,7 +1,7 @@
 import {
   default as computed,
   observes
-} from "ember-addons/ember-computed-decorators";
+} from "discourse-common/utils/decorators";
 import { iconHTML } from "discourse-common/helpers/fa-icon";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import TopicStatusView from "discourse/raw-views/topic-status";
