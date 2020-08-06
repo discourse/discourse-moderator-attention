@@ -1,8 +1,5 @@
 .topic-list .d-icon-asterisk {
-  color: dark-light-choose(
-    scale-color($primary, $lightness: 50%),
-    scale-color($secondary, $lightness: 50%)
-  );
+  color: var(--primary-medium, $primary-medium);
 }
 
 .requires-review .topic-meta-data a.post-date:after {
