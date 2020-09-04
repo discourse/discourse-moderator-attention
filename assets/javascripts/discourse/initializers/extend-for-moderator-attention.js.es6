@@ -1,6 +1,8 @@
+import Handlebars from "handlebars";
+import I18n from "I18n";
 import {
   default as computed,
-  observes
+  observes,
 } from "discourse-common/utils/decorators";
 import { iconHTML } from "discourse-common/helpers/fa-icon";
 import { withPluginApi } from "discourse/lib/plugin-api";
@@ -9,12 +11,12 @@ import TopicStatusView from "discourse/raw-views/topic-status";
 function oldPluginCode(container) {
   const PostView = container.factoryFor("view:post").class;
   PostView.reopen({
-    classNameBindings: ["post.requiresReview:requires-review"]
+    classNameBindings: ["post.requiresReview:requires-review"],
   });
 }
 
 function initializeModeratorAttention(api) {
-  api.decorateWidget("post:classNames", dec => {
+  api.decorateWidget("post:classNames", (dec) => {
     const post = dec.getModel();
 
     if (post.get("requiresReview")) {
@@ -41,7 +43,7 @@ export default {
         }
 
         return unreviewed.indexOf(this.get("post_number")) !== -1;
-      }
+      },
     });
 
     const TopicController = container.factoryFor("controller:topic").class;
@@ -60,7 +62,7 @@ export default {
           }
         }
         this._super(topicId, postNumbers);
-      }
+      },
     });
 
     // used in topic (TODO centralize this)
@@ -101,7 +103,7 @@ export default {
           );
         }
         this._super(buffer);
-      }
+      },
     });
 
     TopicStatusView.reopen({
@@ -114,15 +116,15 @@ export default {
             closeTag: "a",
             title: I18n.t("mod_attention.requires_review"),
             icon: "asterisk",
-            href: `${topicUrl}/${requiresReview}`
+            href: `${topicUrl}/${requiresReview}`,
           });
         }
         return results;
-      }
+      },
     });
 
-    withPluginApi("0.1", api => initializeModeratorAttention(api), {
-      noApi: () => oldPluginCode(container)
+    withPluginApi("0.1", (api) => initializeModeratorAttention(api), {
+      noApi: () => oldPluginCode(container),
     });
-  }
+  },
 };
