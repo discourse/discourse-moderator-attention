@@ -97,7 +97,7 @@ export default {
             I18n.t("mod_attention.requires_review")
           );
           const url = this.get("topic.url") + "/" + posts[0];
-          var reviewedClass = fullyReviewed ? "reviewed" : "unreviewed";
+          let reviewedClass = fullyReviewed ? "reviewed" : "unreviewed";
           buffer.push(
             `<a href='${url}' title='${title}' class='topic-status ${reviewedClass}'>${icon}</a>`
           );
