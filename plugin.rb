@@ -4,6 +4,7 @@
 # about: add icon next to all topics that were not views by moderators
 # version: 0.1
 # authors: Sam Saffron
+# url: https://github.com/discourse/discourse-moderator-attention
 
 PLUGIN_NAME = "discourse_moderator_attention".freeze
 
