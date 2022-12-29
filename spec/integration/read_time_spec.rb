@@ -12,14 +12,14 @@ describe "read time integration" do
     # twice, once for update, once for insert
     2.times do
       post(
-        '/topics/timings.json',
+        "/topics/timings.json",
         params: {
           topic_id: post1.topic_id,
           topic_time: 10,
           timings: {
-            post1.post_number => 100
-          }
-        }
+            post1.post_number => 100,
+          },
+        },
       )
 
       expect(response.status).to eq(200)
