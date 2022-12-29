@@ -9,17 +9,22 @@
 
 PLUGIN_NAME = "discourse_moderator_attention".freeze
 
-register_asset 'stylesheets/moderator-attention.scss'
+register_asset "stylesheets/moderator-attention.scss"
 
 register_svg_icon "asterisk" if respond_to?(:register_svg_icon)
 
 after_initialize do
-
-  module ::DiscourseModeratorAttention; end
+  module ::DiscourseModeratorAttention
+  end
 
   begin
     # Jimmy in our tracking table
-    got_tracking_table = DB.query_single("SELECT 1 FROM moderator_post_views LIMIT 1") rescue nil
+    got_tracking_table =
+      begin
+        DB.query_single("SELECT 1 FROM moderator_post_views LIMIT 1")
+      rescue StandardError
+        nil
+      end
     unless got_tracking_table
       Topic.transaction do
         DB.exec "CREATE TABLE moderator_post_views(
@@ -37,10 +42,8 @@ after_initialize do
   module ::DiscourseModeratorAttention::TopicsController
     def timings
       result = super
-      if  current_user &&
-          current_user.moderator? &&
-          (topic_id = params["topic_id"].to_i) &&
-          (timings = params["timings"])
+      if current_user && current_user.moderator? && (topic_id = params["topic_id"].to_i) &&
+           (timings = params["timings"])
         posts = timings.keys.map(&:to_i)
         record_moderator_timings(current_user.id, topic_id, posts)
       end
@@ -62,11 +65,7 @@ after_initialize do
         RETURNING p.post_number
       SQL
 
-      args = {
-         date: Time.zone.now,
-         topic_id: topic_id,
-         user_id: user_id
-      }
+      args = { date: Time.zone.now, topic_id: topic_id, user_id: user_id }
 
       existing = DB.query_single(sql, args.merge(post_numbers: post_numbers))
 
@@ -87,12 +86,12 @@ after_initialize do
     end
   end
 
-  require_dependency 'topics_controller'
+  require_dependency "topics_controller"
   class ::TopicsController
     prepend ::DiscourseModeratorAttention::TopicsController
   end
 
-  require_dependency 'topic_view_serializer'
+  require_dependency "topic_view_serializer"
   class ::TopicViewSerializer
     attribute :unreviewed_post_numbers
 
@@ -112,21 +111,25 @@ after_initialize do
             p.updated_at > :min_date
       ORDER BY post_number
 SQL
-      min_date = SiteSetting.minimum_review_date.present? ?
-        Date.parse(SiteSetting.minimum_review_date) :
-        Date.parse('1970-01-01')
+      min_date =
+        (
+          if SiteSetting.minimum_review_date.present?
+            Date.parse(SiteSetting.minimum_review_date)
+          else
+            Date.parse("1970-01-01")
+          end
+        )
 
       DB.query_single(sql, min_date: min_date, topic_id: object.topic.id)
     end
-
   end
 
-  require_dependency 'topic'
+  require_dependency "topic"
   class ::Topic
     attr_accessor :requires_review
   end
 
-  require_dependency 'topic_list'
+  require_dependency "topic_list"
   module ::DiscourseModeratorAttention::TopicList
     def load_topics
       topics = super
@@ -145,18 +148,21 @@ SQL
           GROUP BY p.topic_id
         SQL
 
-        min_date = SiteSetting.minimum_review_date.present? ?
-          Date.parse(SiteSetting.minimum_review_date) :
-          Date.parse('1970-01-01')
+        min_date =
+          (
+            if SiteSetting.minimum_review_date.present?
+              Date.parse(SiteSetting.minimum_review_date)
+            else
+              Date.parse("1970-01-01")
+            end
+          )
 
         requires_review = {}
-        DB.query(sql, topic_ids: topic_ids, min_date: min_date).each do |row|
-          requires_review[row.topic_id] = row.min_id
-        end
+        DB
+          .query(sql, topic_ids: topic_ids, min_date: min_date)
+          .each { |row| requires_review[row.topic_id] = row.min_id }
 
-        topics.each do |t|
-          t.requires_review = requires_review[t.id]
-        end
+        topics.each { |t| t.requires_review = requires_review[t.id] }
       end
 
       topics
@@ -167,7 +173,7 @@ SQL
     prepend ::DiscourseModeratorAttention::TopicList
   end
 
-  require_dependency 'topic_list_item_serializer'
+  require_dependency "topic_list_item_serializer"
 
   class ::TopicListItemSerializer
     attributes :requires_review
@@ -180,5 +186,4 @@ SQL
       object.requires_review
     end
   end
-
 end
