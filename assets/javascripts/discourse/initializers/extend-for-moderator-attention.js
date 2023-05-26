@@ -66,8 +66,9 @@ export default {
     });
 
     // used in topic (TODO centralize this)
-    const TopicStatusComponent = container.factoryFor("component:topic-status")
-      .class;
+    const TopicStatusComponent = container.factoryFor(
+      "component:topic-status"
+    ).class;
     const icon = iconHTML("asterisk");
     TopicStatusComponent.reopen({
       @observes("topic.unreviewed_post_numbers.[]")
