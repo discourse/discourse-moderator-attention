@@ -82,7 +82,7 @@ export default {
           this.rerender();
         } else {
           // ninja in url so it does not flash on rerender
-          const first = this.$(".unreviewed")[0];
+          const first = this.element.querySelector(".unreviewed");
           if (first) {
             first.href = this.get("topic.url") + "/" + unreviewed[0];
           }
