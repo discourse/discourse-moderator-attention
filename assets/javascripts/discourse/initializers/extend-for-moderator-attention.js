@@ -1,19 +1,12 @@
 import Handlebars from "handlebars";
-import I18n from "I18n";
+import { withPluginApi } from "discourse/lib/plugin-api";
+import TopicStatusView from "discourse/raw-views/topic-status";
+import { iconHTML } from "discourse-common/helpers/fa-icon";
 import {
   default as computed,
   observes,
 } from "discourse-common/utils/decorators";
-import { iconHTML } from "discourse-common/helpers/fa-icon";
-import { withPluginApi } from "discourse/lib/plugin-api";
-import TopicStatusView from "discourse/raw-views/topic-status";
-
-function oldPluginCode(container) {
-  const PostView = container.factoryFor("view:post").class;
-  PostView.reopen({
-    classNameBindings: ["post.requiresReview:requires-review"],
-  });
-}
+import I18n from "I18n";
 
 function initializeModeratorAttention(api) {
   api.decorateWidget("post:classNames", (dec) => {
@@ -28,7 +21,7 @@ function initializeModeratorAttention(api) {
 export default {
   name: "extend-for-moderator-attention",
   initialize(container) {
-    const currentUser = container.lookup("current-user:main");
+    const currentUser = container.lookup("service:current-user");
     if (!currentUser || !currentUser.get("moderator")) {
       return;
     }
@@ -124,8 +117,6 @@ export default {
       },
     });
 
-    withPluginApi("0.1", (api) => initializeModeratorAttention(api), {
-      noApi: () => oldPluginCode(container),
-    });
+    withPluginApi("0.1", (api) => initializeModeratorAttention(api));
   },
 };

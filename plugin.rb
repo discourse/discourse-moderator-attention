@@ -5,7 +5,6 @@
 # version: 0.1
 # authors: Sam Saffron
 # url: https://github.com/discourse/discourse-moderator-attention
-# transpile_js: true
 
 PLUGIN_NAME = "discourse_moderator_attention".freeze
 
@@ -51,7 +50,7 @@ after_initialize do
     end
 
     def record_moderator_timings(user_id, topic_id, post_numbers)
-      return unless topic_id > 0 && post_numbers.length > 0
+      return if topic_id <= 0 || post_numbers.length <= 0
 
       sql = <<~SQL
         UPDATE moderator_post_views v
